@@ -27,7 +27,7 @@ int main(void) {
 	const int screenHeight = 900;
 	const int fontSize = 35;
 	const char* startScreenText = "Press ENTER to play, DELETE to quit";
-	const char* endScreenText = "Thanks for playing";
+	const char* endScreenText = "Thanks for playing, press ENTER to play again";
 
 	Words words = {0};
 
@@ -42,6 +42,7 @@ int main(void) {
 
 	size_t wordIndex = 0;
 	size_t matchIndex = 0;
+	size_t wordCount = 0;
 
 	float centerX = screenWidth / 2;
 	float centerY = screenHeight / 2;
@@ -80,12 +81,20 @@ int main(void) {
 						centerX = GetRandomValue(0 + circleRadius, screenWidth - circleRadius);
 						centerY = GetRandomValue(0 + circleRadius, screenHeight - circleRadius);
 						matchIndex = 0;
+						wordCount++;
+						if (wordCount == 5) currentScreen = END;
 					} 
 				}
 			}
 			} break;
 
-			case END: break;
+			case END:{
+				if(IsKeyPressed(KEY_ENTER)) {
+					matchIndex = 0;
+					wordCount = 0;
+					currentScreen = TYPING;
+				}
+			}break;
 		}
 
 		BeginDrawing();
@@ -103,6 +112,13 @@ int main(void) {
 			}break;
 
 			case TYPING: {
+
+				DrawText(TextFormat("%zu", wordCount), 
+					GetScreenWidth() / 2,
+					GetScreenHeight() / 2,
+					fontSize + 50, 
+					LIGHTGRAY);
+
 				DrawCircle(centerX, centerY, circleRadius, RED);
 				DrawText(TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data), 
 						centerX - (MeasureText(words.words[wordIndex].data, fontSize) / 2), 
