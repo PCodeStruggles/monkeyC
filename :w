@@ -1,0 +1,28 @@
+//TODO: Load monospace font
+//TODO: Render a centered string to be typed in
+//TODO: Cycle through different strings to be typed
+//TODO: Implemet input loop
+#include "raylib.h"
+#include <stdlib.h>
+
+int main(void) {
+	const int screenWidth = 800;
+	const int screenHeight = 600;
+
+	InitWindow(screenWidth, screenHeight, "Debug Version: MonkeyC");
+	SetTargetFPS(60);
+
+	Font fontTTF = LoadFontEx("./fonts/JetBrainsMono-Regular.ttf", 32,  NULL,  0);
+	SetTextLineSpacing(16);
+
+	while(!WindowShouldClose()) {
+		BeginDrawing();
+		ClearBackground(WHITE);
+		DrawText("Hello World", 0, 0, 22, BLACK);
+		DrawTextEx(fontTTF, "Hello World", (Vector2) {50 ,50},  20.0f, 2.0f, RED);
+		EndDrawing();
+	}
+	UnloadFont(fontTTF);
+	CloseWindow();
+	return 0;
+}
