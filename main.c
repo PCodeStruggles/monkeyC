@@ -16,10 +16,18 @@ typedef struct {
 	Word words[WORDS_CAP];
 } Words;
 
+typedef enum {
+	START = 0,
+	TYPING,
+	END,
+} ScreeType;
+
 int main(void) {
 	const int screenWidth = 1600;
 	const int screenHeight = 900;
 	const int fontSize = 35;
+	const char* startScreenText = "Press ENTER to play, DELETE to quit";
+	const char* endScreenText = "Thanks for playing";
 
 	Words words = {0};
 
@@ -39,43 +47,84 @@ int main(void) {
 	float centerY = screenHeight / 2;
 	float circleRadius = 100.0f;
 
+	ScreeType currentScreen = START;
+
 	InitWindow(screenWidth, screenHeight, "Debug Version: Bubble");
 	SetTargetFPS(60);
 
 	while(!WindowShouldClose()) {
+		switch (currentScreen) {
 
-		int charPressed;
-		while((charPressed = GetCharPressed()) != 0) {
-			if(matchIndex <= words.words[wordIndex].count &&
-				charPressed == words.words[wordIndex].data[matchIndex]) {
-				matchIndex++;
-				if(matchIndex == words.words[wordIndex].count) {
-					//Generate new circle with new word
-					wordIndex = GetRandomValue(0, words.count);
-					circleRadius = MeasureText(words.words[wordIndex].data, fontSize) + 10;
-					centerX = GetRandomValue(0 + circleRadius, screenWidth - circleRadius);
-					centerY = GetRandomValue(0 + circleRadius, screenHeight - circleRadius);
-					matchIndex = 0;
-				} 
+			case START:{
+				if(IsKeyPressed(KEY_ENTER))
+					currentScreen = TYPING;
+
+				if(IsKeyPressed(KEY_DELETE))
+					currentScreen = END;
+			}break;
+		
+			case TYPING: {
+
+			if(IsKeyPressed(KEY_DELETE))
+				currentScreen = END;
+
+			int charPressed;
+			while((charPressed = GetCharPressed()) != 0) {
+				if(matchIndex <= words.words[wordIndex].count &&
+					charPressed == words.words[wordIndex].data[matchIndex]) {
+					matchIndex++;
+					if(matchIndex == words.words[wordIndex].count) {
+						//Generate new circle with new word
+						wordIndex = GetRandomValue(0, words.count);
+						circleRadius = MeasureText(words.words[wordIndex].data, fontSize) + 10;
+						centerX = GetRandomValue(0 + circleRadius, screenWidth - circleRadius);
+						centerY = GetRandomValue(0 + circleRadius, screenHeight - circleRadius);
+						matchIndex = 0;
+					} 
+				}
 			}
+			} break;
+
+			case END: break;
 		}
 
 		BeginDrawing();
 
 		ClearBackground(WHITE);
 
-		DrawCircle(centerX, centerY, circleRadius, RED);
-		DrawText(TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data), 
-				centerX - (MeasureText(words.words[wordIndex].data, fontSize) / 2), 
-				centerY - (GetFontDefault().baseSize) / 2, 
-				fontSize, 
-				LIGHTGRAY);
+		switch (currentScreen) {
 
-		DrawText(TextFormat("%.*s", matchIndex, words.words[wordIndex].data),
-				centerX - (MeasureText(words.words[wordIndex].data, fontSize) / 2), 
-				centerY - (GetFontDefault().baseSize) / 2, 
-				fontSize, 
-				WHITE);
+			case START: {
+				DrawText(startScreenText, 
+					(GetScreenWidth() / 2) - (MeasureText(startScreenText, fontSize) / 2),
+					GetScreenHeight() / 2,
+					fontSize, 
+					LIGHTGRAY);
+			}break;
+
+			case TYPING: {
+				DrawCircle(centerX, centerY, circleRadius, RED);
+				DrawText(TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data), 
+						centerX - (MeasureText(words.words[wordIndex].data, fontSize) / 2), 
+						centerY - (GetFontDefault().baseSize) / 2, 
+						fontSize, 
+						LIGHTGRAY);
+
+				DrawText(TextFormat("%.*s", matchIndex, words.words[wordIndex].data),
+						centerX - (MeasureText(words.words[wordIndex].data, fontSize) / 2), 
+						centerY - (GetFontDefault().baseSize) / 2, 
+						fontSize, 
+						WHITE);
+				} break;
+
+			case END: {
+				DrawText(endScreenText, 
+					(GetScreenWidth() / 2) - (MeasureText(endScreenText, fontSize) / 2),
+					GetScreenHeight() / 2,
+					fontSize, 
+					LIGHTGRAY);
+			}break;
+		}
 
 		EndDrawing();
 	}
