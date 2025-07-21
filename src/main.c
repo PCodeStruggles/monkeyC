@@ -9,7 +9,7 @@
 #include "sv.h"
 
 #define WORDS_CAP 100
-#define textSize(text) MeasureText((text), fontSize) 
+#define getTextSize(text) MeasureText((text), fontSize) 
 
 typedef struct {
 	const char* data;
@@ -89,7 +89,8 @@ int main(void) {
 					if(matchIndex == words.words[wordIndex].count) {
 						//Generate new circle with new word
 						wordIndex = GetRandomValue(0, words.count - 1);
-						circleRadius = textSize(words.words[wordIndex].data) + 10;
+						circleRadius = getTextSize(TextFormat("%.*s", words.words[wordIndex].count,
+											words.words[wordIndex].data)) + 10;
 						centerX = GetRandomValue(0 + circleRadius, 
 								screenWidth - circleRadius);
 						centerY = GetRandomValue(0 + circleRadius, 
@@ -119,7 +120,7 @@ int main(void) {
 
 			case START: {
 				DrawText(startScreenText, 
-					(GetScreenWidth() / 2) - (textSize(startScreenText) / 2),
+					(GetScreenWidth() / 2) - (getTextSize(startScreenText) / 2),
 					GetScreenHeight() / 2,
 					fontSize, 
 					LIGHTGRAY);
@@ -137,13 +138,13 @@ int main(void) {
 
 				const char* wordToRender = TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data);
 				DrawText(wordToRender,
-						centerX - ((float)textSize(wordToRender) / 2),
+						centerX - ((float)getTextSize(wordToRender) / 2),
 						centerY - (float)GetFontDefault().baseSize / 2, 
 						fontSize, 
 						LIGHTGRAY);
 
 				DrawText(TextFormat("%.*s", matchIndex, words.words[wordIndex].data),
-						centerX - ((float)textSize(wordToRender) / 2),
+						centerX - ((float)getTextSize(wordToRender) / 2),
 						centerY - (float)GetFontDefault().baseSize / 2, 
 						fontSize, 
 						WHITE);
@@ -151,7 +152,7 @@ int main(void) {
 
 			case END: {
 				DrawText(endScreenText, 
-					(GetScreenWidth() / 2) - (textSize(endScreenText) / 2),
+					(GetScreenWidth() / 2) - (getTextSize(endScreenText) / 2),
 					GetScreenHeight() / 2,
 					fontSize, 
 					LIGHTGRAY);
