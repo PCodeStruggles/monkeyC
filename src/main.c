@@ -8,7 +8,6 @@
 #define SV_IMPLEMENTATION
 #include "sv.h"
 
-
 #define WORDS_CAP 100
 #define textSize(text) MeasureText((text), fontSize) 
 
@@ -28,26 +27,28 @@ typedef enum {
 	END,
 } ScreeType;
 
-int main(int argc, char* argv[]) {
+int main(void) {
 	const int screenWidth = 1600;
 	const int screenHeight = 900;
 	const int fontSize = 35;
 	const char* startScreenText = "Press ENTER to play, DELETE to quit";
 	const char* endScreenText = "Thanks for playing, press ENTER to play again";
 
-	Words words = {0};
-
-	//Load words from dictionary
 	const char* dictionaryFilePath = "./src/dictionary.txt";
 	const char* dictionary = loadContentFromFile(dictionaryFilePath);
 	String_View svDictionary = { .count = strlen(dictionary), .data = dictionary };
 
+	Words words = {0};
+
 	while(svDictionary.count > 0) {
 		String_View svToken = sv_chop_by_delim(&svDictionary, '\n');
-		words.words[words.count].count = svToken.count;
-		words.words[words.count].data = (char*) malloc(svToken.count);
-		if(words.words[words.count].data == NULL) logErrorAndAbort();
-		memcpy(words.words[words.count].data, svToken.data, svToken.count);
+		words.words[words.count] = (Word) {.count = svToken.count, 
+					           .data = (char*)malloc(svToken.count) };
+		if(words.words[words.count].data == NULL){ 
+			logErrorAndAbort();
+		} else { 
+			memcpy(words.words[words.count].data, svToken.data, svToken.count);
+		}
 		words.count++;
 	}
 
@@ -61,7 +62,7 @@ int main(int argc, char* argv[]) {
 
 	ScreeType currentScreen = START;
 
-	InitWindow(screenWidth, screenHeight, "Debug Version: Bubble");
+	InitWindow(screenWidth, screenHeight, "BubbleC");
 	SetTargetFPS(60);
 
 	while(!WindowShouldClose()) {
