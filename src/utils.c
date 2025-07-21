@@ -36,6 +36,8 @@ char* loadContentFromFile(const char* filePath) {
 		logErrorAndAbort();
 	}
 
+	if((fclose(fptr)) != 0) logErrorAndAbort();
+
 	//Log results
 	printf("Input file: %s\nFile size: %ld\n", filePath, fileSize);
 	printf("Number of bytes read into buffer: %zu\n", bytesRead);

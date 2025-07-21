@@ -134,14 +134,16 @@ int main(void) {
 					LIGHTGRAY);
 
 				DrawCircle(centerX, centerY, circleRadius, RED);
-				DrawText(TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data), 
-						centerX - (float)textSize(words.words[wordIndex].data) / 2, 
+
+				const char* wordToRender = TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data);
+				DrawText(wordToRender,
+						centerX - ((float)textSize(wordToRender) / 2),
 						centerY - (float)GetFontDefault().baseSize / 2, 
 						fontSize, 
 						LIGHTGRAY);
 
 				DrawText(TextFormat("%.*s", matchIndex, words.words[wordIndex].data),
-						centerX - (float)textSize(words.words[wordIndex].data) / 2,
+						centerX - ((float)textSize(wordToRender) / 2),
 						centerY - (float)GetFontDefault().baseSize / 2, 
 						fontSize, 
 						WHITE);
