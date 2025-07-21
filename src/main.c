@@ -1,11 +1,16 @@
 #include "raylib.h"
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
-#define WORDS_CAP 15
-#define textSize(text) MeasureText(text, fontSize) 
+#include "utils.h"
+#define SV_IMPLEMENTATION
+#include "sv.h"
+
+
+#define WORDS_CAP 100
+#define textSize(text) MeasureText((text), fontSize) 
 
 typedef struct {
 	const char* data;
@@ -23,7 +28,7 @@ typedef enum {
 	END,
 } ScreeType;
 
-int main(void) {
+int main(int argc, char* argv[]) {
 	const int screenWidth = 1600;
 	const int screenHeight = 900;
 	const int fontSize = 35;
@@ -32,21 +37,26 @@ int main(void) {
 
 	Words words = {0};
 
-	Word word1 = { .data = "neat", .count = strlen(word1.data) };
-	words.words[words.count++] = word1;
+	//Load words from dictionary
+	const char* dictionaryFilePath = "./src/dictionary.txt";
+	const char* dictionary = loadContentFromFile(dictionaryFilePath);
+	String_View svDictionary = { .count = strlen(dictionary), .data = dictionary };
 
-	Word word2 = { .data = "terrific", .count = strlen(word2.data) };
-	words.words[words.count++] = word2;
-
-	Word word3 = { .data = "outstanding", .count = strlen(word3.data) };
-	words.words[words.count] = word3;
+	while(svDictionary.count > 0) {
+		String_View svToken = sv_chop_by_delim(&svDictionary, '\n');
+		words.words[words.count].count = svToken.count;
+		words.words[words.count].data = (char*) malloc(svToken.count);
+		if(words.words[words.count].data == NULL) logErrorAndAbort();
+		memcpy(words.words[words.count].data, svToken.data, svToken.count);
+		words.count++;
+	}
 
 	size_t wordIndex = 0;
 	size_t matchIndex = 0;
 	size_t wordCount = 0;
 
-	float centerX = screenWidth / 2;
-	float centerY = screenHeight / 2;
+	float centerX = (float) screenWidth / 2;
+	float centerY = (float) screenHeight / 2;
 	float circleRadius = 100.0f;
 
 	ScreeType currentScreen = START;
@@ -77,13 +87,15 @@ int main(void) {
 					matchIndex++;
 					if(matchIndex == words.words[wordIndex].count) {
 						//Generate new circle with new word
-						wordIndex = GetRandomValue(0, words.count);
+						wordIndex = GetRandomValue(0, words.count - 1);
 						circleRadius = textSize(words.words[wordIndex].data) + 10;
-						centerX = GetRandomValue(0 + circleRadius, screenWidth - circleRadius);
-						centerY = GetRandomValue(0 + circleRadius, screenHeight - circleRadius);
+						centerX = GetRandomValue(0 + circleRadius, 
+								screenWidth - circleRadius);
+						centerY = GetRandomValue(0 + circleRadius, 
+								screenHeight - circleRadius);
 						matchIndex = 0;
 						wordCount++;
-						if (wordCount == 5) currentScreen = END;
+						if (wordCount == 15) currentScreen = END;
 					} 
 				}
 			}
@@ -122,14 +134,14 @@ int main(void) {
 
 				DrawCircle(centerX, centerY, circleRadius, RED);
 				DrawText(TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data), 
-						centerX - (textSize(words.words[wordIndex].data) / 2), 
-						centerY - (GetFontDefault().baseSize) / 2, 
+						centerX - (float)textSize(words.words[wordIndex].data) / 2, 
+						centerY - (float)GetFontDefault().baseSize / 2, 
 						fontSize, 
 						LIGHTGRAY);
 
 				DrawText(TextFormat("%.*s", matchIndex, words.words[wordIndex].data),
-						centerX - (textSize(words.words[wordIndex].data) / 2), 
-						centerY - (GetFontDefault().baseSize) / 2, 
+						centerX - (float)textSize(words.words[wordIndex].data) / 2,
+						centerY - (float)GetFontDefault().baseSize / 2, 
 						fontSize, 
 						WHITE);
 				} break;
