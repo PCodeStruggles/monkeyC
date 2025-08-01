@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "raylib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,4 +42,17 @@ char* loadContentFromFile(const char* filePath) {
 	printf("Number of bytes read into buffer: %zu\n", bytesRead);
 
 	return fileData;
+}
+
+void startTimer(Timer* timer, double lifetime) {
+	timer->startTime = GetTime();
+	timer->lifeTime = lifetime;
+}
+
+int timerDone(Timer* timer) {
+	return GetTime() - timer->startTime >= timer->lifeTime ? 1 : 0;
+}
+
+double elapsedTime(Timer* timer) {
+	return GetTime() - timer->startTime;
 }

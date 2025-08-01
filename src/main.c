@@ -1,30 +1,11 @@
 #include "raylib.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils.h"
 #define SV_IMPLEMENTATION
 #include "sv.h"
-
-#define WORDS_CAP 100
-#define getTextSize(text) MeasureText((text), fontSize) 
-
-typedef struct {
-	const char* data;
-	size_t count;
-} Word;
-
-typedef struct {
-	size_t count;
-	Word words[WORDS_CAP];
-} Words;
-
-typedef enum {
-	START = 0,
-	TYPING,
-	END,
-} ScreeType;
 
 int main(void) {
 const int screenWidth = 1600;
@@ -40,6 +21,13 @@ String_View svDictionary = { .count = strlen(dictionary), .data = dictionary };
 
 Words words = {0};
 
+//Index of currently displayed word
+size_t wordIndex = 0;
+//Index of char to be typed in
+size_t matchIndex = 0;
+//Number of word typed
+size_t wordCount = 0;
+
 while(svDictionary.count > 0) {
 	String_View svToken = sv_chop_by_delim(&svDictionary, '\n');
 	words.words[words.count] = (Word) {.count = svToken.count, 
@@ -52,34 +40,32 @@ while(svDictionary.count > 0) {
 	words.count++;
 }
 
-size_t wordIndex = 0;
-size_t matchIndex = 0;
-size_t wordCount = 0;
-
-float centerX = (float) screenWidth / 2;
-float centerY = (float) screenHeight / 2;
-float circleRadius = 100.0f;
-
 ScreeType currentScreen = START;
+
+Timer timer = {0};
 
 InitWindow(screenWidth, screenHeight, "BubbleC");
 SetTargetFPS(60);
+
+float circleCenterX = (float) GetScreenWidth() / 2;
+float circleCenterY = (float) GetScreenHeight() / 2;
+float circleRadius = 100.0f;
 
 while(!WindowShouldClose()) {
 	switch (currentScreen) {
 
 		case START:{
-			if(IsKeyPressed(KEY_ENTER))
-				currentScreen = TYPING;
+			if(IsKeyPressed(KEY_ENTER)) {
+					currentScreen = TYPING;
+					startTimer(&timer, TIMER_LIFETIME);
+				};
 
-			if(IsKeyPressed(KEY_DELETE))
-				currentScreen = END;
+			if(IsKeyPressed(KEY_DELETE)) currentScreen = END;
 		}break;
 	
 		case TYPING: {
 
-		if(IsKeyPressed(KEY_DELETE))
-			currentScreen = END;
+		if(IsKeyPressed(KEY_DELETE)) currentScreen = END;
 
 		int charPressed;
 		while((charPressed = GetCharPressed()) != 0) {
@@ -89,14 +75,14 @@ while(!WindowShouldClose()) {
 				if(matchIndex == words.words[wordIndex].count) {
 					//Generate new circle with new word
 					wordIndex = GetRandomValue(0, words.count - 1);
+					//FIXME: REMOVE MAGIC NUMBER
 					circleRadius = getTextSize(TextFormat("%.*s", words.words[wordIndex].count, words.words[wordIndex].data)) + 10;
-					centerX = GetRandomValue(0 + circleRadius, 
+					circleCenterX = GetRandomValue(0 + circleRadius, 
 							screenWidth - circleRadius);
-					centerY = GetRandomValue(0 + circleRadius, 
+					circleCenterY = GetRandomValue(0 + circleRadius, 
 							screenHeight - circleRadius);
 					matchIndex = 0;
 					wordCount++;
-					if (wordCount == 20) currentScreen = END;
 				} 
 			}
 		}
@@ -107,6 +93,7 @@ while(!WindowShouldClose()) {
 				matchIndex = 0;
 				wordCount = 0;
 				currentScreen = TYPING;
+				startTimer(&timer, TIMER_LIFETIME);
 			}
 		}break;
 	}
@@ -119,43 +106,55 @@ while(!WindowShouldClose()) {
 
 		case START: {
 			DrawText(startScreenText, 
-				(GetScreenWidth() / 2) - (getTextSize(startScreenText) / 2),
-				GetScreenHeight() / 2,
+				screenCenterX - (getTextSize(startScreenText) / 2),
+				screenCenterY,
 				fontSize, 
 				LIGHTGRAY);
 		}break;
 
 		case TYPING: {
-			
-			//Draw word counter
+			DrawText(TextFormat("%.0lf\n", elapsedTime(&timer)), 10, 10, fontSize + 20, LIGHTGRAY);
+
+			//FIXME: REMOVE MAGIC NUMBER
 			DrawText(TextFormat("%zu", wordCount), 
-				GetScreenWidth() / 2,
-				GetScreenHeight() / 2,
+				screenCenterX,
+				screenCenterY,
 				fontSize + 50, 
 				LIGHTGRAY);
 
-			DrawCircle(centerX, centerY, circleRadius, RED);
+			DrawCircle(circleCenterX, circleCenterY, circleRadius, RED);
 
 			const char* wordToRender = TextFormat("%.*s", words.words[wordIndex].count, 
 								words.words[wordIndex].data);
 			DrawText(wordToRender,
-				centerX - ((float)getTextSize(wordToRender) / 2),
-				centerY - (float)GetFontDefault().baseSize / 2, 
+				circleCenterX - ((float)getTextSize(wordToRender) / 2),
+				circleCenterY - (float)GetFontDefault().baseSize / 2, 
 				fontSize, 
 				LIGHTGRAY);
 
 			DrawText(TextFormat("%.*s", matchIndex, words.words[wordIndex].data),
-					centerX - ((float)getTextSize(wordToRender) / 2),
-					centerY - (float)GetFontDefault().baseSize / 2, 
+					circleCenterX - ((float)getTextSize(wordToRender) / 2),
+					circleCenterY - (float)GetFontDefault().baseSize / 2, 
 					fontSize, 
 					WHITE);
+
+			if (timerDone(&timer) || wordCount == 30) currentScreen = END;
 			} break;
 
 		case END: {
 			DrawText(endScreenText, 
-				(GetScreenWidth() / 2) - (getTextSize(endScreenText) / 2),
-				GetScreenHeight() / 2,
+				screenCenterX - (getTextSize(endScreenText) / 2),
+				screenCenterY,
 				fontSize, 
+				LIGHTGRAY);
+
+			//Calculate WMP over 30 sec span
+			//FIXME: REMOVE MAGIC NUMBER
+			const char* wmp = TextFormat("WPM: %zu", wordCount * 2);
+			DrawText(wmp,
+				screenCenterX - getTextSize(wmp) /2,
+				screenCenterY - 75,
+				fontSize,
 				LIGHTGRAY);
 		}break;
 	}
