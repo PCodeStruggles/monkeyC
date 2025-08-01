@@ -4,44 +4,41 @@
 #include <string.h>
 #include <errno.h>
 
+//TODO: Make it so it returns NULL if couldn't read file instead of aborting.
 char* loadContentFromFile(const char* filePath) {
 
 	FILE* fptr;
-	//Open file
 	if ((fptr = fopen(filePath, "r")) == NULL) {
 		printf("ERROR: %d %s - %s\n", errno, filePath, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	//Set cursor to file end to get file size in bytes
 	if(!(fseek(fptr, 0, SEEK_END) == 0)){
+		fclose(fptr);
 		logErrorAndAbort();
 	}
-	//Read cursor position in bytes	
 	long int fileSize = 0;
 	if((fileSize = ftell(fptr)) == -1) {
+		fclose(fptr);
 		logErrorAndAbort();
 	}
-	//Reset cursor position to read file from the beginning
 	fseek(fptr, 0, SEEK_SET);
 
-	//Allocate the file content buffer on the heap
 	char* fileData;
 	if((fileData = (char*)malloc(fileSize)) == NULL) {
+		fclose(fptr);
 		logErrorAndAbort();
 	}
 
-	//Read content file into the buffer pointed to by fileData
 	size_t bytesRead = 0;
 	if((bytesRead = fread(fileData, sizeof(char), fileSize, fptr)) != fileSize){
+		fclose(fptr);
 		logErrorAndAbort();
 	}
 
 	if((fclose(fptr)) != 0) logErrorAndAbort();
 
-	//Log results
 	printf("Input file: %s\nFile size: %ld\n", filePath, fileSize);
 	printf("Number of bytes read into buffer: %zu\n", bytesRead);
 
-	//Return pointer to buffer
 	return fileData;
 }
