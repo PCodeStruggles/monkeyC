@@ -28,7 +28,7 @@ size_t matchIndex = 0;
 //Number of word typed
 size_t wordCount = 0;
 
-while(svDictionary.count > 0) {
+while(svDictionary.count > 0 && words.count < WORDS_CAP) {
 	String_View svToken = sv_chop_by_delim(&svDictionary, '\n');
 	words.words[words.count] = (Word) {.count = svToken.count, 
 					   .data = (char*)malloc(svToken.count) };
